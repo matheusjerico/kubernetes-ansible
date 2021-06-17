@@ -1,0 +1,16 @@
+- name: Adding repo keys to install Helm with apt
+  ansible.builtin.apt_key:
+    url: https://baltocdn.com/helm/signing.asc
+    state: present
+
+- name: Install dependency
+  ansible.builtin.apt:
+    name: apt-transport-https
+
+- name: Adding helm repo
+  ansible.builtin.apt_repository:
+    repo: deb https://baltocdn.com/helm/stable/debian/ all main
+
+- name: Installing helm packages
+  ansible.builtin.apt:
+    name: helm

@@ -1,0 +1,69 @@
+- name: Removing old cluster if exist
+  ansible.builtin.command:
+    cmd: kubeadm reset --force
+  register: kubeadm_reset
+
+- name: Initialize kubernetes cluster
+  ansible.builtin.command:
+    cmd: kubeadm init
+  register: kubeadm_init
+
+- name: Creating .kube directory
+  ansible.builtin.file:
+    path: ~/.kube
+    state: directory
+
+- name: Creating link between admin.conf to ~/.kube/config
+  ansible.builtin.file:
+    src: /etc/kubernetes/admin.conf
+    dest: ~/.kube/config
+    state: link
+
+- name: Configurtion networker weave net pod
+  ansible.builtin.shell:
+    cmd: kubectl apply -f {{ default_url_weavenet }}
+  register: weavenet_result
+
+- name: Getting token to adding other workers on cluster
+  ansible.builtin.shell:
+    cmd: kubeadm token list | cut -d ' ' -f1 | sed -n '2p'
+  register: k8s_token
+
+- name: Getting Kubernetes Master private IP (mode 1)
+  ansible.builtin.shell:
+    cmd: ip route get 1.2.3.4 | awk '{print $7}'
+  register: k8s_master_private_ip_mode_1
+
+- name: Getting Kubernetes Master private IP (mode 2)
+  ansible.builtin.shell:
+    cmd: hostname -I | awk '{print $1}'
+  register: k8s_master_private_ip_mode_2
+
+- name: CA Hash
+  ansible.builtin.shell:
+    cmd: openssl x509 -pubkey -in /etc/kubernetes/pki/ca.crt | openssl rsa -pubin -outform der 2>/dev/null | openssl dgst -sha256 -hex | sed 's/^.* //'
+  register: k8s_master_ca_hash
+
+- name: Adding the token and hash into dummy host
+  ansible.builtin.add_host:
+    name: "K8S_TOKEN_HOLDER"
+    token: "{{ k8s_token.stdout }}"
+    hash: "{{ k8s_master_ca_hash.stdout }}"
+    private_ip_mode_1: "{{ k8s_master_private_ip_mode_1.stdout }}"
+    private_ip_mode_2: "{{ k8s_master_private_ip_mode_2.stdout }}"
+
+- name: Print kubernetes token
+  ansible.builtin.debug:
+    msg: "[MASTER] K8S_TOKEN_HOLDER - The token is {{ hostvars['K8S_TOKEN_HOLDER']['token'] }}"
+
+- name: Print kubernetes CA certificate
+  ansible.builtin.debug:
+    msg: "[MASTER] K8S_TOKEN_HOLDER - The hash is {{ hostvars['K8S_TOKEN_HOLDER']['hash'] }}"
+
+- name: Print kubernetes private IP (mode 1)
+  ansible.builtin.debug:
+    msg: "[MASTER] K8S_TOKEN_HOLDER - The private_ip_mode_1 is {{ hostvars['K8S_TOKEN_HOLDER']['private_ip_mode_1'] }}"
+
+- name: Print kubernetes private IP (mode 2)
+  ansible.builtin.debug:
+    msg: "[MASTER] K8S_TOKEN_HOLDER - The private_ip_mode_2 is {{ hostvars['K8S_TOKEN_HOLDER']['private_ip_mode_2'] }}"

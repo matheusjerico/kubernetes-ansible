@@ -1,0 +1,40 @@
+- hosts: all
+  become: yes
+  user: ubuntu
+  gather_facts: no
+  pre_tasks:
+  - name: 'Updating repo'
+    raw: 'apt-get update'
+  - name: 'Installing python'
+    raw: 'apt-get install -y python'
+  roles:
+  - role: install-k8s
+    tags: ["install_k8s_role"]
+
+- hosts: _k8s_master
+  become: yes
+  user: ubuntu
+  roles:
+  - role: create-cluster
+    tags: ["create_cluster_role"]
+
+- hosts: _k8s_workers
+  become: yes
+  user: ubuntu
+  roles:
+  - role: join-workers
+    tags: ["join_workers_role"]
+
+- hosts: _k8s_master
+  become: yes
+  user: ubuntu
+  roles:
+  - role: install-helm
+    tags: ["install_helm_role"]
+
+- hosts: _k8s_master
+  become: yes
+  user: ubuntu
+  roles:
+  - role: install-monit-tools
+    tags: ["install_monit_tools_role"]

@@ -1,0 +1,23 @@
+- name: Install Docker
+  ansible.builtin.shell:
+    cmd: curl -fsSL https://get.docker.com | bash
+  notify: restart_docker
+
+- name: Adding repo keys to install k8s with apt
+  ansible.builtin.apt_key:
+    url: https://packages.cloud.google.com/apt/doc/apt-key.gpg
+    state: present
+
+- name: Adding kubernetes repo
+  ansible.builtin.apt_repository:
+    repo: deb https://apt.kubernetes.io/ kubernetes-xenial main
+
+- name: Installing kubernetes packages (kubeadm, kubelet, kubectl)
+  ansible.builtin.apt:
+    name: "{{ packages }}"
+  vars:
+    packages:
+    - kubelet
+    - kubeadm
+    - kubectl
+  notify: restart_kubelet

@@ -1,0 +1,10 @@
+---
+# vars file for creating-instances
+instance_type: t2.medium
+sec_group_name: giropops
+image: ami-00399ec92321828f5
+keypair: matheus_ansible_aws
+region: us-east-2
+count: 3
+profile: matheus 
+nodes: ["k8s_master", "k8s_workers", "k8s_workers"]

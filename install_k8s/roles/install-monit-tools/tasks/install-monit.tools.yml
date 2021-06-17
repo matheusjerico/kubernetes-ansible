@@ -1,0 +1,14 @@
+- name: Helm add repo
+  ansible.builtin.shell:
+    cmd: helm repo add prometheus-community {{ url_repo_prometheus }}
+  register: prometheus_add_repo
+
+- name: Helm update repo
+  ansible.builtin.shell:
+    cmd: helm repo update
+  register: prometheus_update_repo
+
+- name: Helm install prometheus operator
+  ansible.builtin.shell:
+    cmd: helm install {{ name_deploy_prometheus }} {{ deploy_prometheus }} 
+  register: prometheus_install

@@ -1,0 +1,16 @@
+- name: Print kubernetes token
+  ansible.builtin.debug:
+    msg: "[MASTER] K8S_TOKEN_HOLDER - The token is {{ hostvars['K8S_TOKEN_HOLDER']['token'] }}"
+
+- name: Print kubernetes ca certificate
+  ansible.builtin.debug:
+    msg: "[MASTER] K8S_TOKEN_HOLDER - The hash is {{ hostvars['K8S_TOKEN_HOLDER']['hash'] }}"
+
+- name: Removing cluster
+  ansible.builtin.command:
+    cmd: kubeadm reset --force
+  register: kubeadm_reset
+
+- name: Adding worker node on kubernetes cluster
+  ansible.builtin.command:
+    cmd: kubeadm join {{ hostvars['K8S_TOKEN_HOLDER']['private_ip_mode_1'] }}:{{ K8S_API_SECURE_PORT }} --token={{ hostvars['K8S_TOKEN_HOLDER']['token'] }} --discovery-token-ca-cert-hash sha256:{{ hostvars['K8S_TOKEN_HOLDER']['hash'] }} 

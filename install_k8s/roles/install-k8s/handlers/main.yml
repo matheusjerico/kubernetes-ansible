@@ -1,0 +1,11 @@
+---
+# handlers file for install-k8s
+- name: restart_docker
+  ansible.builtin.service:
+    name: docker
+    state: restarted
+
+- name: restart_kubelet
+  ansible.builtin.service:
+    name: kubelet
+    state: restarted

@@ -1,0 +1,54 @@
+- name: Installing pip
+  ansible.builtin.apt:
+    name:
+      - python-setuptools
+      - pip
+
+- name: Installing python dependecies to use k8s clint
+  ansible.builtin.pip:
+    name:
+      - requests
+      - openshift
+      - PyYAML
+    executable: pip
+
+- name: Copying deployment file from app-v1
+  ansible.builtin.template:
+    src: app-v1.yml.j2
+    dest: /opt/giropops/app-v1.yml
+    owner: root
+    group: root
+    mode: 0644
+  register: copying_deployment_app_v1
+
+- name: Copying deployment file from app-v2
+  ansible.builtin.template:
+    src: app-v2.yml.j2
+    dest: /opt/giropops/app-v2.yml
+    owner: root
+    group: root
+    mode: 0644
+  register: copying_deployment_app_v2
+
+- name: Create a Deployment from app v2
+  community.kubernetes.k8s:
+    state: present
+    src: /opt/giropops/app-v2.yml
+
+- name: Scale down app v1
+  community.kubernetes.k8s_scale:
+    api_version: v1
+    kind: Deployment
+    name: giropops-v1
+    namespace: default
+    replicas: 1
+    wait_timeout: 120
+
+- name: After two minutws, app v1 will be removed. Press "ctrl + c" to cancel
+  ansible.builtin.pause:
+    minutes: 2
+
+- name: Removing app v1
+  community.kubernetes.k8s:
+    state: absent
+    src: /opt/giropops/app-v1.yml

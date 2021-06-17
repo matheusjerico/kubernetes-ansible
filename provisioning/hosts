@@ -1,0 +1,13 @@
+[local]
+localhost ansible_connection=local ansible_python_interpreter=/home/magalu/anaconda3/envs/ansible/bin/python gather_facts=gather_false
+
+[kubernetes]
+172.31.36.146
+172.31.34.66
+172.31.44.245
+18.118.135.207
+18.217.54.152
+13.59.254.15
+
+
+
